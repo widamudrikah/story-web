@@ -5,45 +5,57 @@ import { subscribePushNotification, unsubscribePushNotification } from '../data/
 export function isNotificationAvailable() {
   return 'Notification' in window;
 }
- 
+
 export function isNotificationGranted() {
   return Notification.permission === 'granted';
 }
- 
+
 export async function requestNotificationPermission() {
   if (!isNotificationAvailable()) {
     console.error('Notification API unsupported.');
     return false;
   }
- 
+
   if (isNotificationGranted()) {
     return true;
   }
- 
+
   const status = await Notification.requestPermission();
- 
+
   if (status === 'denied') {
     alert('Izin notifikasi ditolak.');
     return false;
   }
- 
+
   if (status === 'default') {
     alert('Izin notifikasi ditutup atau diabaikan.');
     return false;
   }
- 
+
   return true;
 }
- 
+
+// export async function getPushSubscription() {
+//   const registration = await navigator.serviceWorker.getRegistration();
+//   return await registration.pushManager.getSubscription();
+// }
+
 export async function getPushSubscription() {
   const registration = await navigator.serviceWorker.getRegistration();
+
+  if (!registration || !registration.pushManager) {
+    console.warn('Service worker belum siap atau pushManager tidak tersedia.');
+    return null;
+  }
+
   return await registration.pushManager.getSubscription();
 }
- 
+
+
 export async function isCurrentPushSubscriptionAvailable() {
   return !!(await getPushSubscription());
 }
- 
+
 export function generateSubscribeOptions() {
   return {
     userVisibleOnly: true,
@@ -55,12 +67,12 @@ export async function subscribe() {
   if (!(await requestNotificationPermission())) {
     return;
   }
- 
+
   if (await isCurrentPushSubscriptionAvailable()) {
     alert('Sudah berlangganan push notification.');
     return;
   }
- 
+
   console.log('Mulai berlangganan push notification...');
 
   const failureSubscribeMessage = 'Langganan push notification gagal diaktifkan.';
@@ -70,11 +82,16 @@ export async function subscribe() {
 
   try {
     const registration = await navigator.serviceWorker.getRegistration();
+
+    if (!registration || !registration.pushManager) {
+      alert('Service worker belum siap atau browser tidak mendukung PushManager.');
+      return;
+    }
     pushSubscription = await registration.pushManager.subscribe(generateSubscribeOptions());
 
     const { endpoint, keys } = pushSubscription.toJSON();
     const response = await subscribePushNotification({ endpoint, keys });
-    
+
     if (!response.ok) {
       console.error('subscribe: response:', response);
       alert(failureSubscribeMessage);
@@ -124,7 +141,7 @@ export async function unsubscribe() {
 
       return;
     }
-    
+
     alert(successUnsubscribeMessage);
   } catch (error) {
     alert(failureUnsubscribeMessage);

@@ -83,8 +83,6 @@ class App {
 
       if (confirm('Apakah Anda yakin ingin keluar?')) {
         getLogout();
-
-        // Redirect
         location.hash = '/login';
       }
     });
@@ -95,7 +93,6 @@ class App {
     if (!isLogin) return;
 
     const pushNotificationTools = document.getElementById('push-notification-tools');
-    // Pastikan element ada sebelum mencoba mengakses innerHTML
     if (!pushNotificationTools) return;
 
     const isSubscribed = await isCurrentPushSubscriptionAvailable();
@@ -127,7 +124,6 @@ class App {
       let page = routes[url];
 
       if (!page) {
-        // Redirect to 404 page if route not found
         location.hash = '/404';
         page = routes['/404'];
       }
@@ -149,7 +145,6 @@ class App {
       }
     } catch (error) {
       console.error('Error rendering page:', error);
-      // Redirect to 404 page for any rendering errors
       location.hash = '/404';
     }
   }
